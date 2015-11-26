@@ -10,7 +10,7 @@
 ## Example
 The main function in this project is prove. It accepts the conclusion you are trying to reach as its first argument and the premises as the rest of the arguments. If the statement has been proved, the output will end in 'QED'. If the statement cannot be proven, then it will end in '?'.
 ``` CommonLisp
-; Deducing a from a \/ b and ~b
+; Deducing a from a || b and ~b
 (prove 'a '(or a b) '(not b))
 1. A || B            given
 2. ~B                given
@@ -19,7 +19,7 @@ The main function in this project is prove. It accepts the conclusion you are tr
 5. F                 resolve 4 2
 QED
 
-; Deducing r from p \/ q, p -> r, and q -> r
+; Deducing r from p || q, p -> r, and q -> r
 (prove 'r '(or p q) '(or (not p) r) '(or (not q) r))
 1. P || Q            given
 2. ~P || R           given
@@ -31,7 +31,7 @@ QED
 8. F                 resolve 7 4
 QED
   
-; Attempting to deduce a from a \/ b, b \/ c, ~c
+; Attempting to deduce a from a || b, b || c, and ~c
 (prove 'a '(or a b) '(or b c) '(not c))
 Conclusion unable to be proven from premises
 ?
