@@ -35,6 +35,17 @@ QED
 (prove 'a '(or a b) '(or b c) '(not c))
 Conclusion unable to be proven from premises
 ?
+
+; Deducing q from ~r, ~(p && ~q), and ~p -> (r && s)
+(prove 'q '(not r) '(not (and p (not q))) '(implies (not p) (and r s)))
+1. ~R                given
+2. ~P || Q           given
+3. (R || P) && (S || P)  given
+4. ~Q                negation of conclusion
+5. ~P                resolve 4 2
+6. R                 resolve 5 3
+7. F                 resolve 6 1
+QED
 ```
 
 ## TODO (in no particular order)
