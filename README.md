@@ -1,5 +1,5 @@
 # Theorem_Prover
-(Very) simple automated theorem prover using resolution
+(Very) simple automated theorem prover using [linear resolution](http://plato.stanford.edu/entries/reasoning-automated/)
 
 ## Details
 * All formulas used should be in CNF
