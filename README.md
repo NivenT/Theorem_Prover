@@ -39,5 +39,5 @@ Conclusion unable to be proven from premises
 
 ## TODO (in no particular order)
 - [X] Make the output of prove more neat/readable
-- [ ] Automatically convert formulas to CNF
+- [X] Automatically convert formulas to CNF
 - [ ] Support claims made in FOL
