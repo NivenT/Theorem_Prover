@@ -32,7 +32,7 @@
 			(equal (subseq var (- (length var) 2)) ".."))))
 (defun commutativep (op)
 	"Returns whether or not an operation is commutative"
-	(member op '(and or implies)))
+	(member op '(and or equiv)))
 (defun unaryp (op)
 	"Returns whether or not an operation is unary"
 	(member op '(not)))
@@ -132,6 +132,7 @@
 										((not f) -> t)
 										((not (not ?x)) -> ?x)
 										((implies ?a ?b) -> (or (not ?a) ?b))
+										((equiv ?a ?b) -> (and (implies ?a ?b) (implies ?b ?a)))
 										))
 (defun simplify (expression &optional (rules *simplification-rules*) (prev-expr expression))
 	"Simplifies an expression"
@@ -159,7 +160,7 @@
 (defun prove-helper (conclusion given)
 	(refute (append (mapcar #'(lambda (f) (list (->cnf f) 'g)) given) (list (list (->cnf `(not ,conclusion)) 'n)))))
 (defun refute (statements &optional (res (caar (last statements))))
-	(if (equal res 'f) 
+	(if (member 'f statements :test #'equal :key #'car) 
 		(append statements (list 'qed))
 		(progn
 			(loop for s in statements for i from 1 do
@@ -168,12 +169,12 @@
 						(return-from refute (refute (append statements (list (list r i))) r)))))
 			(append statements (list '?)))))
 			
-(defun print-wff (wff)
-	(cond	((matches '(or ?x) wff) (print-wff (cadr wff)))
-			((matches '(and ?x) wff) (print-wff (cadr wff)))
+(defun print-wff (wff &optional (grp nil))
+	(cond	((matches '(or ?x) wff) (print-wff (cadr wff) grp))
+			((matches '(and ?x) wff) (print-wff (cadr wff) grp))
 			((matches '(not ?x) wff) (concatenate 'string "~" (print-wff (cadr wff))))
-			((matches '(or ?..) wff) (concatenate 'string (print-wff (cadr wff)) " || " (print-wff (list* 'or (cddr wff)))))
-			((matches '(and ?..) wff) (concatenate 'string (print-wff (cadr wff)) " && " (print-wff (list* 'and (cddr wff)))))
+			((matches '(or ?..) wff) (concatenate 'string (when (eq grp 'and) "(") (print-wff (cadr wff) 'or) " || " (print-wff (list* 'or (cddr wff)) 'or) (when (eq grp 'and) ")")))
+			((matches '(and ?..) wff) (concatenate 'string (when (eq grp 'or) "(") (print-wff (cadr wff) 'and) " && " (print-wff (list* 'and (cddr wff)) 'and) (when (eq grp 'or) ")")))
 			(t (write-to-string wff))))
 (defun prove (conclusion &rest given)
 	(let ((proof (prove-helper conclusion given)))
