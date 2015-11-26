@@ -12,16 +12,32 @@ The main function in this project is prove. It accepts the conclusion you are tr
 ``` CommonLisp
 ; Deducing a from a \/ b and ~b
 (prove 'a '(or a b) '(not b))
-  => ((OR A B) (NOT B) (NOT A) B F QED)
+1. A || B            given
+2. ~B                given
+3. ~A                negation of conclusion
+4. B                 resolve 3 1
+5. F                 resolve 4 2
+QED
+
 ; Deducing r from p \/ q, p -> r, and q -> r
 (prove 'r '(or p q) '(or (not p) r) '(or (not q) r))
-  => ((OR P Q) (OR (NOT P) R) (OR (NOT Q) R) (NOT R) (NOT P) Q R F QED)
+1. P || Q            given
+2. ~P || R           given
+3. ~Q || R           given
+4. ~R                negation of conclusion
+5. ~P                resolve 4 2
+6. Q                 resolve 5 1
+7. R                 resolve 6 3
+8. F                 resolve 7 4
+QED
+  
 ; Attempting to deduce a from a \/ b, b \/ c, ~c
 (prove 'a '(or a b) '(or b c) '(not c))
-  => ((OR A B) (OR B C) (NOT C) (NOT A) B ?)
+Conclusion unable to be proven from premises
+?
 ```
 
 ## TODO (in no particular order)
-- [ ] Make the output of prove more neat/readable
+- [X] Make the output of prove more neat/readable
 - [ ] Automatically convert formulas to CNF
 - [ ] Support claims made in FOL
