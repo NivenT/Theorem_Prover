@@ -52,3 +52,5 @@ QED
 - [X] Make the output of prove more neat/readable
 - [X] Automatically convert formulas to CNF
 - [ ] Support claims made in FOL
+- [ ] Add parser for reading formulas from strings
+- [ ] Make pat-match give consistently formatted output (remove strip)
