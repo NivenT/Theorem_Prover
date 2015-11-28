@@ -130,11 +130,7 @@
 										((or ?x) -> ?x)
 										((or ?.. ?x ?.. (not ?x) ?..) -> t)
 										((or ?.. (not ?x) ?.. ?x ?..) -> t)
-										((not t) -> f)
-										((not f) -> t)
 										((not (not ?x)) -> ?x)
-										((implies ?a ?b) -> (or (not ?a) ?b))
-										((equiv ?a ?b) -> (and (implies ?a ?b) (implies ?b ?a)))
 										))
 (defun simplify (expression &optional (rules *simplification-rules*) (prev-expr expression))
 	"Simplifies an expression"
@@ -186,7 +182,7 @@
 	(let ((proof (prove-helper conclusion given)))
 		(if (eq (car (last proof)) '?)
 			(princ "Conclusion unable to be proven from premises")
-			(loop for wff in (slice proof 0 (1- (length proof))) for i from 1 do
+			(loop for wff in (slice proof 0 -1) for i from 1 do
 				(cond	((eq (car (last wff)) 'g) (format t "~a. ~a~20t given" i (print-wff (car wff))))
 						((eq (car (last wff)) 'n) (format t "~a. ~a~20t negation of conclusion" i (print-wff (car wff))))
 						(t (format t "~a. ~a~20t resolve ~a ~a" i (print-wff (car wff)) (1- i) (car (last wff)))))
@@ -197,6 +193,8 @@
 	(let ((wff (simplify expression)) (tmp nil))
 		(cond	((matches '(not (and ?..)) wff) (list* 'or (mapcar #'(lambda (w) (list 'not w)) (cdadr wff))))
 				((matches '(not (or ?..)) wff) (list* 'and (mapcar #'(lambda (w) (list 'not w)) (cdadr wff))))
+				((matches '(implies ?a ?b) wff) `(or (not ,(cadr wff)) ,(caddr wff)))
+				((matches '(equiv ?a ?b) wff) `(and (implies ,(cadr wff) ,(caddr wff)) (implies ,(caddr wff) ,(cadr wff))))
 				((consistent-bindingsp (setf tmp (pick-bindings (strip (pat-match '(or ?a.. (or ?b..) ?c..) wff)))))
 					(list* 'or (bind tmp '(?a.. ?b.. ?c..))))
 				((consistent-bindingsp (setf tmp (pick-bindings (strip (pat-match '(and ?a.. (and ?b..) ?c..) wff)))))
