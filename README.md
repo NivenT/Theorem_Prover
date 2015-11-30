@@ -54,3 +54,6 @@ QED
 - [ ] Support claims made in FOL
 - [ ] Add parser for reading formulas from strings
 - [ ] Make pat-match give consistently formatted output (remove strip)
+- [ ] Improve conversion to CNF
+- [ ] Add function for generating truth tables
+- [ ] Remove need for some of the "hacks" in the code
