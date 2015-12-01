@@ -70,3 +70,4 @@ QED
 - [ ] Improve conversion to CNF
 - [ ] Add function for generating truth tables
 - [ ] Remove need for some of the "hacks" in the code
+- [ ] Make generalized proof function where you specify axioms and deduction techniques along with premises and conclusion
