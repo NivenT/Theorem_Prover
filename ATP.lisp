@@ -23,7 +23,8 @@
 (defun mappend (func lst)
 	(apply #'append (mapcar func lst)))
 			
-			
+(defun implies (a b)
+	(or (not a) b))	
 (defun variablep (x)
 	"Returns whether or not x is a variable (symbol of form ?x)"
 	(and (symbolp x) (equal (char (symbol-name x) 0) #\?)))
@@ -40,7 +41,7 @@
 	(member op '(not)))
 (defun logicalp (expr)
 	"Returns whether or not expr is t (true) or f (false)"
-	(member expr '(t f)))
+	(member expr '(t f nil)))
 (defun get-op (expr)
 	"Returns the operation in an expression"
 	(car expr))
@@ -139,11 +140,11 @@
 										((or ?a (xor ?a ?b)) -> (or ?a ?b))
 										((or ?a (xor ?b ?a)) -> (or ?a ?b))
 										))
-(defun simplify (expression &optional (rules *simplification-rules*) (prev-expr expression))
+(defun simplify (expression &optional (rules *simplification-rules*))
 	"Simplifies an expression"
 	(if (consp expression)
 		(let ((f (simplify-helper (evaluate (loop for term in expression collect (simplify term rules))) rules)))
-			(if (eq-expr prev-expr f) f (simplify f rules))) 
+			(if (eq-expr expression f) f (simplify f rules))) 
 		expression))
 (defun bind (bindings vars)
 	(apply #'append (remove-if #'variablep (sublis bindings vars))))
@@ -165,7 +166,7 @@
 (defun split-and (wff)
 	(if (matches '(and ?..) wff) (mappend #'split-and (cdr wff)) (list wff)))
 (defun prove-helper (conclusion given)
-	(refute (append (mappend #'(lambda (f) (mapcar #'(lambda (c) (list c 'g)) (split-and (->cnf f)))) given) (list (list (->cnf `(not ,conclusion)) 'n)))))
+	(refute (append (mappend #'(lambda (f) (mapcar #'(lambda (c) (list c 'g)) (split-and (->cnf f)))) given) (mapcar #'(lambda (f) (list f 'n)) (split-and (->cnf `(not ,conclusion)))))))
 (defun refute (statements &optional (res (caar (last statements))))
 	;(print statements)
 	(if (member 'f statements :test #'equal :key #'car) 
@@ -183,17 +184,21 @@
 	(cond	((matches '(or ?x) wff) (print-wff (cadr wff) grp))
 			((matches '(and ?x) wff) (print-wff (cadr wff) grp))
 			((matches '(not ?x) wff) (concatenate 'string "~" (print-wff (cadr wff))))
-			((matches '(or ?..) wff) (concatenate 'string (when (eq grp 'and) "(") (print-wff (cadr wff) 'or) " || " (print-wff (list* 'or (cddr wff)) 'or) (when (eq grp 'and) ")")))
-			((matches '(and ?..) wff) (concatenate 'string (when (eq grp 'or) "(") (print-wff (cadr wff) 'and) " && " (print-wff (list* 'and (cddr wff)) 'and) (when (eq grp 'or) ")")))
+			((matches '(implies ?a ?b) wff) (concatenate 'string 
+				(when (eq grp 'im) "(") (print-wff (cadr wff) 'im) " -> " (print-wff (caddr wff) 'im) (when (eq grp 'im) ")")))
+			((matches '(or ?..) wff) (concatenate 'string 
+				(unless (member grp '(nil or)) "(") (print-wff (cadr wff) 'or) " || " (print-wff (list* 'or (cddr wff)) 'or) (unless (member grp '(nil or)) ")")))
+			((matches '(and ?..) wff) (concatenate 'string 
+				(unless (member grp '(nil and)) "(") (print-wff (cadr wff) 'and) " && " (print-wff (list* 'and (cddr wff)) 'and) (unless (member grp '(nil and)) ")")))
 			(t (write-to-string wff))))
 (defun prove (conclusion &rest given)
 	(let ((proof (prove-helper conclusion given)))
 		(if (eq (car (last proof)) '?)
 			(princ "Conclusion unable to be proven from premises")
 			(loop for wff in (slice proof 0 -1) for i from 1 do
-				(cond	((eq (car (last wff)) 'g) (format t "~a. ~a~27t given" i (print-wff (car wff))))
-						((eq (car (last wff)) 'n) (format t "~a. ~a~27t negation of conclusion" i (print-wff (car wff))))
-						(t (format t "~a. ~a~27t resolve ~a ~a" i (print-wff (car wff)) (1- i) (car (last wff)))))
+				(cond	((eq (car (last wff)) 'g) (format t "~a. ~a~20t given" i (print-wff (car wff))))
+						((eq (car (last wff)) 'n) (format t "~a. ~a~20t negation of conclusion" i (print-wff (car wff))))
+						(t (format t "~a. ~a~20t resolve ~a ~a" i (print-wff (car wff)) (1- i) (car (last wff)))))
 				(princ #\newline)))
 		(car (last proof))))
 		
@@ -216,3 +221,21 @@
 		(let ((wff (->cnf-helper (loop for w in expression collect (->cnf w)))))
 			(if (eq-expr wff expression) wff (->cnf wff)))
 		expression))
+(defun get-vars (wff)
+	(cond 	((member wff '(t f implies not and or xor equiv)) nil)
+			((null wff) nil)
+			((symbolp wff) (list wff))
+			((consp wff) (union (get-vars (car wff)) (get-vars (cdr wff))))
+			(t nil)))
+(defun num->logbindings (n)
+	(if (= n 0) nil (append (num->logbindings (ash n -1)) (list (logand n 1)))))
+(defun make-bindings (vars vals)
+	(loop for v in vars for w in vals collect (cons v w)))
+(defun make-truth-table (wff)
+	(let ((vars (get-vars wff)))
+		(format t "  ~a  ~{|  ~a  ~}|  ~a~%" (car vars) (cdr vars) (print-wff wff))
+		(loop for v from 1 to (1+ (length vars)) do (format t "------"))
+		(flet ((->log bit (if (= bit 0) 'f 't)))
+			(loop for i from 0 to (1- (expt 2 (length vars))) do
+				(let* ((tmp (num->logbindings i)) (vals (sublis '((1 . t) (0 . f)) (append (make-list (- (length vars) (length tmp)) :initial-element 0) tmp))))
+					(format t "~%  ~a  ~{|  ~a  ~}|  ~a" (car vals) (cdr vals) (evaluate wff (make-bindings vars vals))))))))
