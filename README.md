@@ -46,6 +46,19 @@ Conclusion unable to be proven from premises
 6. R                 resolve 5 3
 7. F                 resolve 6 1
 QED
+
+; Deducing a=b from a, b xor c, and ~c
+(prove '(equiv a b) 'a '(xor b c) '(not c))
+1. A                 given
+2. B || C            given
+3. ~B || ~C          given
+4. ~C                given
+5. A || B            negation of conclusion
+6. ~A || ~B          negation of conclusion
+7. ~B                resolve 6 1
+8. C                 resolve 7 2
+9. F                 resolve 8 4
+QED
 ```
 
 ## TODO (in no particular order)
@@ -54,3 +67,7 @@ QED
 - [ ] Support claims made in FOL
 - [ ] Add parser for reading formulas from strings
 - [ ] Make pat-match give consistently formatted output (remove strip)
+- [ ] Improve conversion to CNF
+- [ ] Add function for generating truth tables
+- [ ] Remove need for some of the "hacks" in the code
+- [ ] Make generalized proof function where you specify axioms and deduction techniques along with premises and conclusion
