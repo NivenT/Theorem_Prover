@@ -66,8 +66,8 @@ QED
 - [X] Automatically convert formulas to CNF
 - [ ] Support claims made in FOL
 - [ ] Add parser for reading formulas from strings
-- [ ] Make pat-match give consistently formatted output (remove strip)
-- [ ] Improve conversion to CNF
-- [ ] Add function for generating truth tables
-- [ ] Remove need for some of the "hacks" in the code
+- [X] Make pat-match give consistently formatted output (remove strip)
+- [X] Improve conversion to CNF
+- [X] Add function for generating truth tables
+- [X] Remove need for some of the "hacks" in the code
 - [ ] Make generalized proof function where you specify axioms and deduction techniques along with premises and conclusion
